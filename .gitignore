@@ -1,0 +1,10 @@
+.idea
+*.iml
+.env
+.env.test
+.venv
+.DS_Store
+.vscode
+.ruff_cache
+.secrets
+test_data

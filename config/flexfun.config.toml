@@ -1,0 +1,9 @@
+# (C) 2024 GoodData Corporation
+
+[flexfun]
+
+# specify one or more modules that contain FlexFun implementations
+#
+functions = [
+    "flexfun.sample_function"
+]
