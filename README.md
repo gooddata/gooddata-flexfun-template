@@ -203,9 +203,82 @@ the `pre-commit` hooks getting involved and modify (auto-fix) the files. You typ
 then have to re-drive the commit. The recommended workflow is to run `make fix-staged` first,
 and when green proceed with the commit itself.
 
+#### Secrets for dev and dev testing
+
+During the bootstrap, the `make dev` will create `.secrets` file. This file is included in .gitignore
+and will not be committed to git. It is intended to hold any env variables that contain secrets.
+
+If you use `direnv`, then the contents of this file will be automatically sourced when you navigate to
+the directory. Otherwise, you may want to source the file manually (or finally get around and install
+direnv).
+
+As the name indicates, the `.secrets` file is useful for holding any sensitive information:
+
+- GDCN_LICENSE_KEY - the license key to use if you are doing end-to-end testing using docker-compose
+  (see below)
+
+- GOODDATA_FLIGHT_ENUMERATED_TOKENS__TOKENS - can be used to specify list of secret tokens
+  used for authentication.
+
+  This one is a bit tricky, you have to specify an array of tokens: `'["...", "..."]'`
+
 ## Building Docker image
 
-TODO
+The `make docker` target is available and builds Docker image `flexfun-server`. You may want
+to modify the image name and specify your own custom one.
+
+The Docker image build will:
+
+- Install all dependencies from `requirements.txt` file
+
+  IMPORTANT: dependencies from requirements-dev.txt are intentionally not installed.
+
+- Copy content of the entire `src` folder and make sure it is added on PYTHONPATH
+
+  IMPORTANT: contents of `tests` directory is not copied to the image.
+
+## Running and testing locally using Docker Compose
+
+The template comes with `docker-compose.yaml` which consists of two services:
+
+1.  The GoodData Cloud Native Container Edition (gooddata-cn-ce). This runs the entire Cloud Native
+    in a single container.
+
+2.  The server hosting your FlexFunctions (gooddata-flexfun-server)
+
+To start it all up, you do the usual: `docker compose up -d --build`. At the time of startup, the
+Docker image with server hosting your functions will be built (see section above).
+
+Right now, you have to add your server as a data source to GoodData CN manually. Do POST the following
+payload to http://localhost:3000/api/v1/entities/dataSources:
+
+```json
+{
+  "data": {
+    "id": "flexfun-server",
+    "type": "dataSource",
+    "attributes": {
+      "url": "grpc://gooddata-flexfun-server:17001",
+      "name": "flexfun-server",
+      "type": "FLIGHTRPC",
+      "schema": "",
+      "cacheStrategy": "NEVER"
+    }
+  }
+}
+```
+
+Use token authorization using the `YWRtaW46Ym9vdHN0cmFwOmFkbWluMTIz` token.
+
+If you make some changes and want to rebuild & restart just the FlexFun server
+run: `docker compose up -d --build gooddata-flexfun-server`.
+
+Rebuild and restart of your server is usually very quick so this should allow you to iterate
+very fast. Still, even faster are more natural iteration is to use the typical tests that you
+can write in `tests` directory.
+
+We recommend doing most of the testing using programmatic tests and then use the end-to-end
+testing using docker compose for final verification.
 
 ## Getting ready for deployment
 
