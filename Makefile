@@ -33,6 +33,10 @@ fix-staged:
 test:
 	pytest tests
 
+.PHONY: docker
+docker:
+	docker build -t flexfun-server:latest -f Dockerfile .
+
 .PHONY: dev-server
 dev-server:
 	gooddata-flight-server \

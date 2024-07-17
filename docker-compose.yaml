@@ -1,0 +1,45 @@
+# (C) 2024 GoodData Corporation
+version: '3.7'
+
+services:
+  gooddata-cn-ce:
+    image: 020413372491.dkr.ecr.us-east-1.amazonaws.com/nas/gooddata-cn-ce:master
+    ports:
+      - "3000:3000"
+      - "5432:5432"
+    volumes:
+      - gooddata-cn-ce-data:/data
+    environment:
+      APP_LOGLEVEL: "INFO"
+      GDCN_LICENSE_KEY: ${GDCN_LICENSE_KEY}
+      GDC_FEATURES_VALUES_ENABLE_FLIGHTRPC_DATA_SOURCE: "true"
+  gooddata-flexfun-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "17001:17001"
+    volumes:
+      - ./config:/tmp/config:Z
+    command:
+      - start
+      - --config
+      - /tmp/config/auth.config.toml
+      - /tmp/config/flexfun.config.toml
+      - /tmp/config/server.config.toml
+      - --dev-log
+    environment:
+      GOODDATA_FLIGHT_SERVER__LISTEN_HOST: "0.0.0.0"
+      GOODDATA_FLIGHT_SERVER__LISTEN_PORT: 17001
+      GOODDATA_FLIGHT_SERVER__ADVERTISE_HOST: "gooddata-flexfun-server"
+      GOODDATA_FLIGHT_SERVER__ADVERTISE_PORT: 17001
+      GOODDATA_FLIGHT_SERVER__HEALTHCHECK_HOST: "0.0.0.0"
+      GOODDATA_FLIGHT_SERVER__HEALTHCHECK_PORT: 8877
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8877/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  gooddata-cn-ce-data:
