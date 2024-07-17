@@ -13,6 +13,18 @@ services:
       APP_LOGLEVEL: "INFO"
       GDCN_LICENSE_KEY: ${GDCN_LICENSE_KEY}
       GDC_FEATURES_VALUES_ENABLE_FLIGHTRPC_DATA_SOURCE: "true"
+#
+# extra tuning for some of the services running inside the AIO.
+#
+#
+#      PULSAR_MEM: "-Xms256m -Xmx512m -XX:MaxDirectMemorySize=256m"
+#      BOOKIE_MEM: "-Xms256m -Xmx512m -XX:MaxDirectMemorySize=256m"
+#      METADATA_API_JAVA_OPTS: "-Xms256m -Xmx2048m"
+#      SQL_EXECUTOR_JAVA_OPTS: "-Xms256m -Xmx1024m"
+#      JAVA_OPTS: "-Xms256m -Xmx1024m"
+#      CALCIQUE_JAVA_OPTS: "-Xms256m -Xmx1024m"
+#      AFM_EXEC_API_JAVA_OPTS: "-Xms256m -Xmx1024m"
+
   gooddata-flexfun-server:
     build:
       context: .
