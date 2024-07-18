@@ -237,6 +237,8 @@ The Docker image build will:
 
   IMPORTANT: contents of `tests` directory is not copied to the image.
 
+- Copy content of the entire `config` folder
+
 ## Running and testing locally using Docker Compose
 
 The template comes with `docker-compose.yaml` which consists of two services:
@@ -274,13 +276,98 @@ If you make some changes and want to rebuild & restart just the FlexFun server
 run: `docker compose up -d --build gooddata-flexfun-server`.
 
 Rebuild and restart of your server is usually very quick so this should allow you to iterate
-very fast. Still, even faster are more natural iteration is to use the typical tests that you
+very fast. Still, even faster and more natural is to use the typical tests that you
 can write in `tests` directory.
 
 We recommend doing most of the testing using programmatic tests and then use the end-to-end
 testing using docker compose for final verification.
 
 ## Getting ready for deployment
+
+### Configuration
+
+The underlying server infrastructure uses [Dynaconf](https://www.dynaconf.com/) to manage
+configuration.
+
+The configuration can be loaded from one or more TOML files and/or may be also loaded
+from environment variables. **The values from environment variables always win.**
+
+Upon server startup, you can specify none or multiple configuration files and complement
+this with environment variables.
+
+This gives a lot of flexibility in how you can approach the configuration. If you don't know
+where to start, here is a recommendation:
+
+- Have configuration files in the `config` directory
+
+- Keep existing files set up so that they work out of the box in your localhost deployment
+
+- Override localhost-specific settings using environment variables
+
+  For list of environment variables, see for example the `run-server.sh`. The environment
+  variables are derived from setting names:
+
+  - Always start with `GOODDATA_FLIGHT`
+  - The section name (e.g. `[server]`) comes next, so for example `GOODDATA_FLIGHT_SERVER`
+  - Then comes the setting name itself (e.g. `listen_host`), separated with two underscores;
+    so you end up with `GOODDATA_FLIGHT_SERVER__LISTEN_HOST`
+
+  All settings that can be specified in the TOML file can be also set via environment
+  variable.
+
+Alternatively, you can have multiple different configuration files and use one set for
+localhost and one for production. So for example you can keep a single `flexfun.config.toml`
+for both localhost and production, and then have one set of auth & config for localhost
+and one for production.
+
+Furthermore, we recommend checking the Dynaconf documentation - it has a lot of additional
+features which you can take advantage of. It even has its own templating.
+
+### Setting up hostnames
+
+This part can get somewhat tricky if you do not read the documentation. We recommend to
+check out the comments in the `server.config.toml`.
+
+For production, go as follows:
+
+- Set `listen_host` to `0.0.0.0`
+- Set `advertise_host` to either public IP or public hostname of your server.
+
+  Essentially, this is the value that you would also use when adding the server
+  as data source to the GoodData Cloud.
+
+NOTE: Setting correct `advertise_host` is essential because the primary flow to
+invoke functions is the GetFlightInfo -> DoGet flow. Where GetFlightInfo call returns
+information where and how to consume the function result. The server infrastructure
+needs your input (e.g. the `advertise_host`) so that it can fill the 'where' part.
+
+### Deployment without Docker
+
+Deploying and running your server without use of Docker is a viable approach and in
+many cases can be the simplest or most straightforward.
+
+1. You have to get the whole template project to a host
+
+   - You can do this by zipping the whole directory (minu)
+   - Or, probably better is to use Git repository. Keep the template in the repository
+     and then check out the contents from the host
+
+2. Install production dependencies:
+
+   - Your host must have Python 3.11 installed
+   - Navigate to directory with checked-out contents
+   - Run `make prod` - this will install production dependencies
+
+3. Start the server
+
+  - Easiest is to use `run-server.sh`
+  - This will start server using the configuration stored in `config` directory
+  - Typically, you will need to specify host-specific settings, you can do
+    so using environment variables or have a prod-specific settings files.
+  - If you have not already, see the 'Configuration' section above for additional
+    detail.
+
+### Dockerized deployment
 
 TODO
 
