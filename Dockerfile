@@ -19,7 +19,12 @@ RUN set -x \
   && mkdir -p /data \
   && chown -R 1000:1000 /data \
   && mkdir -p /src \
-  && chown -R 1000:1000 /src
+  && chown -R 1000:1000 /src \
+  && mkdir -p /config \
+  && chown -R 1000:1000 /config
+
+# Copy all configs
+COPY /config /config
 
 # Copy all source code and add it to PYTHONPATH
 COPY /src /src
