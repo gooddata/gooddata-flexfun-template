@@ -49,3 +49,6 @@ token_verification = "EnumeratedTokenVerification"
 # the value of 'Bearer <token>' where <token> is the value token
 # itself.
 # token_header_name = "x-custom-header-with-token"
+
+#[enumerated_tokens]
+#tokens = [""]

@@ -341,6 +341,64 @@ invoke functions is the GetFlightInfo -> DoGet flow. Where GetFlightInfo call re
 information where and how to consume the function result. The server infrastructure
 needs your input (e.g. the `advertise_host`) so that it can fill the 'where' part.
 
+### Authentication
+
+At the moment, the server infrastructure supports two authentication methods:
+
+- No authentication at all (this is default that the template starts with)
+- Token based authentication, where the client has to present a secret token
+
+For deployment where your server is reachable from the public networks, you almost
+always want to set up authentication.
+
+1. Set the `authentication_method` option to `token`
+
+   Alternatively, you can use the `GOODDATA_FLIGHT_SERVER__AUTHENTICATION_METHOD`
+   environment variable.
+
+2. Define the secret tokens. This is done either using configuration or
+   environment variable.
+
+   ```toml
+   [enumerated_tokens]
+   tokens = []
+   ```
+
+   The `tokens` setting should contain one or more tokens. These are really some values
+   that you keep secret and distribute them to clients. They can be whatever you see fit.
+
+   The same can be achieved using the `GOODDATA_FLIGHT_ENUMERATED_TOKENS__TOKENS`. The
+   value of this environment variable has to be coded as an array:
+
+   `GOODDATA_FLIGHT_ENUMERATED_TOKENS__TOKENS='["...", "..."]'`
+
+**IMPORTANT**: Never commit the secrets to VCS. Keep the secret token configuration
+outside of this project.
+
+### TLS
+
+Using TLS (Transport Level Security) is highly recommended. To do so, you have to
+obtain certificate and private key for your server - a topic that is not covered
+in this manual.
+
+When you have private key and the certificate (typically a `.pem` files), you can
+configure these server settings (server.config.toml):
+
+- `use_tls = true` to enable TLS
+- `tls_certificate` - configure server's certificate
+- `tls_private_key` - configure server's private key
+
+For further information, see the comments for these settings in the
+[server.config.toml](./config/server.config.toml) file.
+
+**IMPORTANT**: you can opt to generate and self-sign the server certificate. It is
+a viable option. If you do that, you **must** distribute the CA certificate the clients. So
+for example you have to configure the data source in GoodData so that it includes the
+CA certificate (this is covered in followup sections.)
+
+**IMPORTANT**: do not commit server certificate and private key to VCS. Keep them outside
+of this project (e.g. only keep them on / distribute them to the host where your server runs).
+
 ### Deployment without Docker
 
 Deploying and running your server without use of Docker is a viable approach and in
@@ -348,15 +406,17 @@ many cases can be the simplest or most straightforward.
 
 1. You have to get the whole template project to a host
 
-   - You can do this by zipping the whole directory (minu)
-   - Or, probably better is to use Git repository. Keep the template in the repository
-     and then check out the contents from the host
+   - You can do this by creating tarball of essential content using `make archive`
+   - Then get the tarball to the host using your favorite method and extract it there
+
+   HINT: Another approach is to have a git repository where you push and manage the
+   contents of this project. Then check out the contents of this repository from the
+   host.
 
 2. Install production dependencies:
 
    - Your host must have Python 3.11 installed
-   - Navigate to directory with checked-out contents
-   - Run `make prod` - this will install production dependencies
+   - On the host, run `make prod` - this will install production dependencies
 
 3. Start the server
 

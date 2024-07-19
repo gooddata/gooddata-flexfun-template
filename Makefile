@@ -51,3 +51,15 @@ dev-server:
 	        config/auth.config.toml \
 	        config/flexfun.config.toml \
 	    --dev-log
+
+.PHONY: archive
+archive:
+	tar --exclude __pycache__ \
+		-cvpzf flexfuns.tar.gz \
+		./config \
+		./src \
+		./libs \
+		./requirements.txt \
+		./Makefile \
+		./run-server.sh \
+		./.python-version
