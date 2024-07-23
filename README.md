@@ -254,8 +254,12 @@ Docker image with server hosting your functions will be built (see section above
 Right now, you have to add your server as a data source to GoodData CN manually. Do POST the following
 payload to http://localhost:3000/api/v1/entities/dataSources:
 
-```json
-{
+```bash
+curl http://localhost:3000/api/v1/entities/dataSources \
+-H "Authorization: Bearer YWRtaW46Ym9vdHN0cmFwOmFkbWluMTIz" \
+-s -H "Content-Type: application/vnd.gooddata.api+json" \
+-X POST \
+-d '{
   "data": {
     "id": "flexfun-server",
     "type": "dataSource",
@@ -263,14 +267,13 @@ payload to http://localhost:3000/api/v1/entities/dataSources:
       "url": "grpc://gooddata-flexfun-server:17001",
       "name": "flexfun-server",
       "type": "FLIGHTRPC",
+      "token": "none",
       "schema": "",
       "cacheStrategy": "NEVER"
     }
   }
-}
+}'
 ```
-
-Use token authorization using the `YWRtaW46Ym9vdHN0cmFwOmFkbWluMTIz` token.
 
 If you make some changes and want to rebuild & restart just the FlexFun server
 run: `docker compose up -d --build gooddata-flexfun-server`.
@@ -441,21 +444,25 @@ At the moment, this is only possible using the REST API.
 You need to do a POST request on the `/api/v1/entities/dataSources` resource. The payload
 should look like this:
 
-```json
-{
+```bash
+curl https://<gooddatacloud>/api/v1/entities/dataSources \
+-H "Authorization: Bearer <gooddata-token>" \
+-s -H "Content-Type: application/vnd.gooddata.api+json" \
+-X POST \
+-d '{
   "data": {
-    "id": "my-flexfun",
+    "id": "flexfun-server",
     "type": "dataSource",
     "attributes": {
       "url": "grpc+tls://<your-hostname>:<port>",
-      "token": "<secret authentication token>",
-      "name": "my-flexfun",
+      "name": "flexfun-server",
       "type": "FLIGHTRPC",
+      "token": "<secret authentication token for the Flight RPC server>",
       "schema": "",
       "cacheStrategy": "NEVER"
     }
   }
-}
+}'
 ```
 
 ### TLS and custom certificate
@@ -463,16 +470,20 @@ should look like this:
 If your server has TLS enabled and uses self-signed certificates, then you also have to
 provide this certificate as a parameter of the data source:
 
-```json
-{
+```bash
+curl https://<gooddatacloud>/api/v1/entities/dataSources \
+-H "Authorization: Bearer <gooddata-token>" \
+-s -H "Content-Type: application/vnd.gooddata.api+json" \
+-X POST \
+-d '{
   "data": {
-    "id": "my-flexfun",
+    "id": "flexfun-server",
     "type": "dataSource",
     "attributes": {
       "url": "grpc+tls://<your-hostname>:<port>",
-      "token": "<secret authentication token>",
-      "name": "my-flexfun",
+      "name": "flexfun-server",
       "type": "FLIGHTRPC",
+      "token": "<secret authentication token for the Flight RPC server>",
       "schema": "",
       "cacheStrategy": "NEVER",
       "parameters": [
@@ -483,7 +494,7 @@ provide this certificate as a parameter of the data source:
       ]
     }
   }
-}
+}'
 ```
 
 The `value` of the `tlsRootCertificate` is Base64 encoded content of the CA certificate .pem file. You can
