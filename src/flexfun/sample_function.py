@@ -3,8 +3,11 @@ from typing import Optional
 
 import gooddata_flight_server as gf
 import pyarrow
+import structlog
 from gooddata_flight_server import ServerContext
 from gooddata_flight_server.tasks.base import ArrowData
+
+_LOGGER = structlog.get_logger("sample_flex_function")
 
 
 class SampleFlexFunction(gf.FlexFun):
@@ -64,6 +67,8 @@ class SampleFlexFunction(gf.FlexFun):
         columns: Optional[tuple[str, ...]],
         headers: dict[str, list[str]],
     ) -> ArrowData:
+        _LOGGER.info("function_called", parameters=parameters)
+
         return self._StaticData
 
     @staticmethod
