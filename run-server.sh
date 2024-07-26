@@ -5,9 +5,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 SERVER_CMD="${SCRIPT_DIR}/.venv/bin/gooddata-flight-server"
 
 export PYTHONPATH="${SCRIPT_DIR}/src"
+export CONFIG_ENV="${1:-dev}"
 
-# You can set the following environment variables to override
-# any values that may be loaded from configuration.
+# You can set the following environment variables to set or override
+# any settings that can be loaded from configuration files.
 #
 #export GOODDATA_FLIGHT_SERVER__LISTEN_HOST="..."
 #export GOODDATA_FLIGHT_SERVER__LISTEN_PORT="..."
@@ -19,7 +20,7 @@ export PYTHONPATH="${SCRIPT_DIR}/src"
 
 $SERVER_CMD start \
               --config \
-                config/server.config.toml \
-                config/auth.config.toml \
+                config/${CONFIG_ENV}.server.toml \
                 config/flexfun.config.toml \
+              --logging-config config/default.logging.ini \
               --dev-log

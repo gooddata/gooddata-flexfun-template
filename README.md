@@ -141,7 +141,7 @@ any expensive initialization.
 **HINT**: expensive one-time initialization can be done by overloading `on_load` method.
 
 The server comes with built-in call queuing and separate thread pool that services the
-invocations. You can configure this in [config/server.config.toml](./config/server.config.toml).
+invocations. See server configuration and the comments in it to find out more.
 
 **IMPORTANT**: Your code must not make any assumptions that a thread that creates the FlexFunction
 instance will be the same thread that invokes the `call`.
@@ -170,7 +170,7 @@ Typically, if your function does not do any crazy / non-standard stuff, then the
 solid guarantee that a function passing tests will run fine once it is running inside the
 Flight RPC server.
 
-Additionally, you can run the `make dev-server` which will start the full Flight RPC server
+Additionally, you can use the `./run-server.sh` which will start the full Flight RPC server
 with your functions: you can do end-to-end testing using Flight RPC. For a simple manual smoke
 test, look at the [try_dev_server.py](./tests/flexfun/try_dev_server.py) - this lists functions
 available on the running dev server.
@@ -290,38 +290,38 @@ testing using docker compose for final verification.
 ### Configuration
 
 The underlying server infrastructure uses [Dynaconf](https://www.dynaconf.com/) to manage
-configuration.
+configuration. This template comes with two configuration files:
 
-The configuration can be loaded from one or more TOML files and/or may be also loaded
-from environment variables. **The values from environment variables always win.**
+- [dev.server.toml](./config/dev.server.toml) is tailored for dev-testing on localhost
+- [prod.server.toml](./config/prod.server.toml) is a stub of configuration for production
+  server deployment.
 
-Upon server startup, you can specify none or multiple configuration files and complement
-this with environment variables.
+The 'prod' configuration file is preset to listen on all addresses, use TLS and token authentication.
+But it naturally omits configuration of TLS (certificate, private key) and the details of
+token authentication. You have to supply those or (and we do not recommend this) turn them off.
 
-This gives a lot of flexibility in how you can approach the configuration. If you don't know
-where to start, here is a recommendation:
+**IMPORTANT**: depending on your production host, you may further tweak the configuration - especially
+the `advertise_host`. Check out the following sections to learn more.
 
-- Have configuration files in the `config` directory
+#### Environment Variables
 
-- Keep existing files set up so that they work out of the box in your localhost deployment
+You can use environment variables to override any setting from the configuration
+files.
 
-- Override localhost-specific settings using environment variables
+This is typically useful when handling secrets: you don't want to hammer those into the
+configuration files that make it to a VCS. Instead, the values of secrets are injected at runtime
+using environment variables.
 
-  For list of environment variables, see for example the `run-server.sh`. The environment
-  variables are derived from setting names:
+For list of environment variables, see for example the `run-server.sh`. The environment
+variables are derived from setting names:
 
-  - Always start with `GOODDATA_FLIGHT`
-  - The section name (e.g. `[server]`) comes next, so for example `GOODDATA_FLIGHT_SERVER`
-  - Then comes the setting name itself (e.g. `listen_host`), separated with two underscores;
-    so you end up with `GOODDATA_FLIGHT_SERVER__LISTEN_HOST`
+- Always start with `GOODDATA_FLIGHT`
+- The section name (e.g. `[server]`) comes next, so for example `GOODDATA_FLIGHT_SERVER`
+- Then comes the setting name itself (e.g. `listen_host`), separated with two underscores;
+  so you end up with `GOODDATA_FLIGHT_SERVER__LISTEN_HOST`
 
   All settings that can be specified in the TOML file can be also set via environment
   variable.
-
-Alternatively, you can have multiple different configuration files and use one set for
-localhost and one for production. So for example you can keep a single `flexfun.config.toml`
-for both localhost and production, and then have one set of auth & config for localhost
-and one for production.
 
 Furthermore, we recommend checking the Dynaconf documentation - it has a lot of additional
 features which you can take advantage of. It even has its own templating.
@@ -329,7 +329,7 @@ features which you can take advantage of. It even has its own templating.
 ### Setting up hostnames
 
 This part can get somewhat tricky if you do not read the documentation. We recommend to
-check out the comments in the `server.config.toml`.
+check out the comments in the `prod.server.toml`.
 
 For production, go as follows:
 
@@ -339,7 +339,7 @@ For production, go as follows:
   Essentially, this is the value that you would also use when adding the server
   as data source to the GoodData Cloud.
 
-NOTE: Setting correct `advertise_host` is essential because the primary flow to
+NOTE: Setting correct `advertise_host` is critical because the primary flow to
 invoke functions is the GetFlightInfo -> DoGet flow. Where GetFlightInfo call returns
 information where and how to consume the function result. The server infrastructure
 needs your input (e.g. the `advertise_host`) so that it can fill the 'where' part.
@@ -392,7 +392,7 @@ configure these server settings (server.config.toml):
 - `tls_private_key` - configure server's private key
 
 For further information, see the comments for these settings in the
-[server.config.toml](./config/server.config.toml) file.
+[prod.server.toml](./config/prod.server.toml) file.
 
 **IMPORTANT**: you can opt to generate and self-sign the server certificate. It is
 a viable option. If you do that, you **must** distribute the CA certificate the clients. So
@@ -423,10 +423,11 @@ many cases can be the simplest or most straightforward.
 
 3. Start the server
 
-  - Easiest is to use `run-server.sh`
-  - This will start server using the configuration stored in `config` directory
+  - Easiest is to use `./run-server.sh prod`
+  - This will start server using the [prod.server.toml](./config/prod.server.toml) configuration
+    stored in `config` directory
   - Typically, you will need to specify host-specific settings, you can do
-    so using environment variables or have a prod-specific settings files.
+    so using environment variables or further tweak the configuration.
   - If you have not already, see the 'Configuration' section above for additional
     detail.
 

@@ -42,16 +42,6 @@ test:
 docker:
 	docker build -t flexfun-server:latest -f Dockerfile .
 
-.PHONY: dev-server
-dev-server:
-	gooddata-flight-server \
-	    start \
-	    --config \
-	        config/server.config.toml \
-	        config/auth.config.toml \
-	        config/flexfun.config.toml \
-	    --dev-log
-
 .PHONY: archive
 archive:
 	tar --exclude __pycache__ \
