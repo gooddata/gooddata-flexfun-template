@@ -69,6 +69,10 @@ class SampleFlexFunction(gf.FlexFun):
     ) -> ArrowData:
         _LOGGER.info("function_called", parameters=parameters)
 
+        execution_context = gf.ExecutionContext.from_parameters(parameters)
+
+        _LOGGER.info("execution_context", execution_context=execution_context)
+
         return self._StaticData
 
     @staticmethod
