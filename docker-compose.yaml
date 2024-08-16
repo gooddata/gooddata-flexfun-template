@@ -36,9 +36,8 @@ services:
     command:
       - start
       - --config
-      - /tmp/config/auth.config.toml
+      - /tmp/config/dev.server.toml
       - /tmp/config/flexfun.config.toml
-      - /tmp/config/server.config.toml
       - --dev-log
     environment:
       GOODDATA_FLIGHT_SERVER__LISTEN_HOST: "0.0.0.0"
