@@ -13,6 +13,7 @@ services:
       APP_LOGLEVEL: "INFO"
       GDCN_LICENSE_KEY: ${GDCN_LICENSE_KEY}
       GDC_FEATURES_VALUES_ENABLE_FLIGHTRPC_DATA_SOURCE: "true"
+      GDC_FEATURES_VALUES_ENABLE_MODERN_EXECUTION_FLOW: "true"
 #
 # extra tuning for some of the services running inside the AIO.
 #
