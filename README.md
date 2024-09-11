@@ -157,6 +157,167 @@ remove the existing `.venv`.
 However, especially when adding more dependencies, removing dependencies or running into issues, we
 recommend to re-bootstrap the environment: `rm -rf .venv && make dev`.
 
+### Logging
+
+This template comes with the `structlog` dependency installed by default. The `structlog` is used
+and configured so that it uses Python stdlib logging backend. The `structlog` pipeline is set up so
+that:
+
+- In dev mode, the logs are pretty-printed into console (achieved by `--dev-log` option of the server)
+- In production deployment, the logs are serialized into JSON (using orjson) which is then written out.
+  This is ideal for consumption in log aggregators.
+
+The stdlib loggers are configured using the [config/default.logging.ini](config/default.logging.ini)
+file. In the default setup, all INFO-level logs are emitted. You can tweak the config file as you see
+fit - see Python logging documentation to learn more. This document will not go into those details.
+
+NOTE: you typically do not want to touch the formatter settings inside the logging ini file - the
+`structlog` library creates the entire log lines accordingly to deployment mode.
+
+The use of `structlog` and loggers is fairly straightforward:
+
+```python
+import structlog
+
+_LOGGER = structlog.get_logger("sample_flex_function")
+_LOGGER.info("event-name", some_event_key="value_to_log")
+```
+
+#### Recommendations
+
+Here are few assorted recommendations based on our production experience with `structlog`:
+
+- You can log complex objects such as lists, tuples, dicts and data classes no problem
+  - Be conservative though. What can be serialized into dev-log may not always serialize
+    using `orjson` into production logs
+- Always log exceptions using the special [exc_info](https://www.structlog.org/en/stable/exceptions.html) event key.
+- Mind the cardinality of the logger instances. If you have a class of which you may have thousands of
+  instances, then it is **not a good idea** to create a logger instance for each instance of your class - even
+  if the logger name is the same; this is because each logger instance comes with memory overhead.
+
+### Prometheus Metrics
+
+GoodData's Flight RPC server can be configured to start HTTP endpoint that exposes values of Prometheus
+metrics. This is disabled by default.
+
+To get started with Prometheus metrics you need to:
+
+- Set `metrics_host` and `metrics_port`
+
+  - Check out the config file comments to learn more about these settings.
+  - What you have to remember is that the Prometheus scraper is an external process that
+    needs to reach the HTTP endpoint via network.
+
+- Install `prometheus_client`
+
+  - Uncomment the `prometheus_client` line [requirements.txt](requirements.txt) and run `make dev`
+  - Note: as is, the `gooddata-flight-server` already installs this package so the `make dev` step above
+    will actually not install anything new. However, this may change in the future; not to mention that
+    it is generally not a good idea to rely on transitive dependencies.
+
+From then on, you can start using the Prometheus client to create various types of metrics. For example:
+
+```python
+from prometheus_client import Counter
+
+# instantiate counter
+MY_COUNTER = Counter(
+    "my_counter",
+    "Fitting description of `my_counter`.",
+)
+
+def some_function():
+    # ...
+    MY_COUNTER.inc()
+```
+
+#### Recommendations
+
+Here are a few assorted recommendations based on our production experience:
+
+- You must avoid double-declaration of metrics. If you try to define metric with same
+  identifier twice, the registration will fail.
+
+- It is nice to declare all/most metrics in single place. For example create `my_metrics.py`
+  file and in that have `MyMetrics` class with one static field per metric.
+
+  This approach leads to better 'discoverability' of available metrics just by looking
+  at code. Using class with static field per-metric in turn makes imports and autocomplete
+  more convenient.
+
+
+### OpenTelemetry Tracing
+
+GoodData's Flight RPC server can be configured to integrate with OpenTelemetry and start
+and auto-configure OpenTelemetry exporters. It will also auto-fill the ResourceAttributes
+by doing discovery where possible.
+
+See the `otel_*` options in the configuration files to learn more. In a nutshell it
+goes as follows:
+
+- Configure which exporter to use using `otel_exporter_type` setting.
+
+  Nowadays, the `otlp-grpc` or `otlp-http` is the usual choice.
+
+  Depending on the exporter you use, you may/must specify additional, exporter-specific
+  environment variables to configure the exporter. The supported environment variables
+  are documented in the respective OpenTelemetry exporter package; e.g. they are not
+  something special to GoodData's Flight Server.
+
+- Install `opentelemetry-api` and the respective exporter package.
+
+  See the [requirements.txt](requirements.txt). The packages are already listed there but
+  are commented out. Once you uncomment them, do `make dev` to ensure they are installed.
+
+- Tweak the other `otel_*` settings: you must at minimum set the `otel_service_name`
+
+  The other settings will fall back to defaults. However, it is usually likely that you
+  will want to customize them to fit your conventions.
+
+To start tracing, you need to initialize a tracer. You can do so as follows:
+
+```python
+from opentelemetry import trace
+
+MY_TRACER: trace.Tracer = trace.ProxyTracer("my_tracer")
+```
+
+Typically, you want to create one instance of tracer for your entire project and then import
+that instance and use it wherever needed to create spans:
+
+```python
+from your_module_with_tracer import MY_TRACER
+
+def some_function():
+    # ... code
+    with MY_TRACER.start_as_current_span("do_some_work") as span:
+        # ... code
+        pass
+```
+
+Note: there are many ways to instrument your code with spans. See [OpenTelemetry documentation](https://opentelemetry.io/docs/languages/python/instrumentation/)
+to find out more.
+
+#### Recommendations
+
+Here are a few assorted recommendations based on our production experience:
+
+- Always use the `ProxyTracer`. The underlying initialization code in GoodData's Flight server
+  will correctly set the actual tracer which the proxy will call.
+
+  This way, if you turn off OpenTelemetry (by commenting out the `otel_export_type` setting or setting it
+  to 'none'), the NoOpTracer will be injected under the covers and all the tracing code will
+  be no-op as well.
+
+- Do not skim on the contextual detail / essential info for troubleshooting:
+
+  - Add span attributes to provide additional contextual information.
+  - Log events and errors to span to propagate significant return values / errors
+
+With tracing, it is always a dance between adding too much information (and thus possibly overwhelming
+your underlying tracing infrastructure) vs only having basic span information which is useful to
+identify control flow but does not provide necessary detail to help debugging problems.
+
 ### Dev-testing
 
 A FlexFunction is a piece of code like any other. The fact that it is exposed via Flight RPC
