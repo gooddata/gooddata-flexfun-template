@@ -1,6 +1,20 @@
 # use the wheel included in the repo until the package is
 # officially released and published to PyPi
-./libs/gooddata_flight_server-1.25.0-py3-none-any.whl
+./libs/gooddata_flight_server-1.26.0-py3-none-any.whl
 
-pyarrow>=16.1.0
+pyarrow
 structlog
+
+# If you want to export OpenTelemetry traces to an OTLP backend,
+# uncomment these dependencies and tweak otel_* settings in the
+# config TOML files.
+#
+# opentelemetry-api
+# opentelemetry-exporter-otlp
+
+
+# If you want to add Prometheus metrics to your code, then
+# uncomment this dependency and configure the metrics_* settings
+# in the config TOML files.
+#
+# prometheus-client
