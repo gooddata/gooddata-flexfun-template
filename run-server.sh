@@ -7,6 +7,12 @@ SERVER_CMD="${SCRIPT_DIR}/.venv/bin/gooddata-flight-server"
 export PYTHONPATH="${SCRIPT_DIR}/src"
 export CONFIG_ENV="${1:-dev}"
 
+DEV_LOG=""
+
+if [[ "$CONFIG_ENV" == "dev" ]]; then
+   DEV_LOG="--dev-log"
+fi
+
 # You can set the following environment variables to set or override
 # any settings that can be loaded from configuration files.
 #
@@ -23,4 +29,4 @@ $SERVER_CMD start \
                 config/${CONFIG_ENV}.server.toml \
                 config/flexfun.config.toml \
               --logging-config config/default.logging.ini \
-              --dev-log
+              ${DEV_LOG}
