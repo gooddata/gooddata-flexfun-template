@@ -4,8 +4,6 @@ from typing import Optional
 import gooddata_flight_server as gf
 import pyarrow
 import structlog
-from gooddata_flight_server import ServerContext
-from gooddata_flight_server.tasks.base import ArrowData
 
 _LOGGER = structlog.get_logger("sample_flex_function")
 
@@ -66,17 +64,30 @@ class SampleFlexFunction(gf.FlexFun):
         parameters: dict,
         columns: Optional[tuple[str, ...]],
         headers: dict[str, list[str]],
-    ) -> ArrowData:
+    ) -> gf.ArrowData:
         _LOGGER.info("function_called", parameters=parameters)
 
         execution_context = gf.ExecutionContext.from_parameters(parameters)
 
         _LOGGER.info("execution_context", execution_context=execution_context)
 
+        if execution_context.execution_type == gf.ExecutionType.REPORT:
+            _LOGGER.info(
+                "Received report execution request",
+                report_execution_context=execution_context.report_execution_request,
+            )
+        elif execution_context.execution_type == gf.ExecutionType.LABEL_ELEMENTS:
+            _LOGGER.info(
+                "Received label elements execution request",
+                label_elements_execution_context=execution_context.label_elements_execution_request,
+            )
+        else:
+            _LOGGER.info("Received unknown execution request")
+
         return self._StaticData
 
     @staticmethod
-    def on_load(ctx: ServerContext) -> None:
+    def on_load(ctx: gf.ServerContext) -> None:
         """
         You can do one-time initialization here. This function will be invoked
         exactly once during startup.
