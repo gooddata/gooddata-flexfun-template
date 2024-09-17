@@ -4,11 +4,12 @@ from typing import Optional
 import gooddata_flight_server as gf
 import pyarrow
 import structlog
+from gooddata_flexfun import ExecutionContext, ExecutionType, FlexFun
 
 _LOGGER = structlog.get_logger("sample_flex_function")
 
 
-class SampleFlexFunction(gf.FlexFun):
+class SampleFlexFunction(FlexFun):
     """
     A sample FlexFunction. This serves static data. It is not very useful but is
     good starting point to explain FlexFunctions:
@@ -32,8 +33,7 @@ class SampleFlexFunction(gf.FlexFun):
     how it does the computation - it only tells your code that you can trim some columns
     from the result.
 
-    If you want to learn more, check out the class documentation on the `gf.FlexFun`
-    class.
+    If you want to learn more, check out the class documentation on the `FlexFun` class.
     """
 
     Name = "SampleFlexFunction"
@@ -67,16 +67,16 @@ class SampleFlexFunction(gf.FlexFun):
     ) -> gf.ArrowData:
         _LOGGER.info("function_called", parameters=parameters)
 
-        execution_context = gf.ExecutionContext.from_parameters(parameters)
+        execution_context = ExecutionContext.from_parameters(parameters)
 
         _LOGGER.info("execution_context", execution_context=execution_context)
 
-        if execution_context.execution_type == gf.ExecutionType.REPORT:
+        if execution_context.execution_type == ExecutionType.REPORT:
             _LOGGER.info(
                 "Received report execution request",
                 report_execution_context=execution_context.report_execution_request,
             )
-        elif execution_context.execution_type == gf.ExecutionType.LABEL_ELEMENTS:
+        elif execution_context.execution_type == ExecutionType.LABEL_ELEMENTS:
             _LOGGER.info(
                 "Received label elements execution request",
                 label_elements_execution_context=execution_context.label_elements_execution_request,
