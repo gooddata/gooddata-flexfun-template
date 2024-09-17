@@ -30,6 +30,7 @@ fi
 #export GOODDATA_FLIGHT_ENUMERATED_TOKENS__TOKENS='[""]'
 
 $SERVER_CMD start \
+              --methods-provider gooddata_flexfun \
               --config \
                 config/${CONFIG_ENV}.server.toml \
                 config/flexfun.config.toml \

@@ -1,6 +1,7 @@
 # use the wheel included in the repo until the package is
 # officially released and published to PyPi
 ./libs/gooddata_flight_server-1.26.0-py3-none-any.whl
+./libs/gooddata_flexfun-1.26.0-py3-none-any.whl
 
 pyarrow
 structlog
