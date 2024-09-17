@@ -319,6 +319,82 @@ With tracing, it is always a dance between adding too much information (and thus
 your underlying tracing infrastructure) vs only having basic span information which is useful to
 identify control flow but does not provide necessary detail to help debugging problems.
 
+### Health Checks
+
+The GoodData Flight Server comes with a basic health-checking infrastructure - this is especially useful
+when deploying to environments (such as k8s) that monitor health of your server and can automatically
+restart it in case of problems.
+
+When you configure the `health_check_host` (and optionally also `health_check_port`) setting, the Flight
+Server will expose two HTTP endpoints:
+
+- `/ready` - indicates whether the server is up and ready to serve requests
+
+  The endpoint will respond with status `500` if the server is not ready. Otherwise will respond with
+  `202`. The server is deemed ready when all its modules (which includes your FlexFunctions) are
+  up and the Flight RPC server is 'unlocked' to handle requests.
+
+- `/live` - indicates whether the server is still alive and can be used. The liveness is determined
+  from the status of the modules.
+
+  Each of the server's modules can report its status to a central health checking service. If any of
+  the modules is unhealthy, the whole server is unhealthy.
+
+  Similar to the readiness, the server will respond with status `500` when not healthy. Otherwise, it
+  will respond with status `202`.
+
+Creating health-checks for your FlexFunctions is fairly straightforward:
+
+- There is the `on_load()` static method that you can implement on your FlexFunction; it receives an
+  instance of `ServerContext`
+
+  - The `ServerContext` contains `health` property - which returns an instance of `ServerHealthMonitor`
+
+  - At this occasion, your code should hold onto / propagate the health monitor to any mission-critical
+    modules / components that are used by your FlexFunction
+
+- The `ServerHealthMonitor` has `set_module_status(module, status)` method - you can use this to indicate status
+
+  - The module `name` argument to this method can be anything you see fit
+  - The status is either `ModuleHealthStatus.OK` or `ModuleHealthStatus.NOT_OK`
+  - When your module is `NOT_OK`, the entire server is `NOT_OK`
+  - Usually, there is a grace period for which the server can be `NOT_OK`; after the time is up,
+    environment will restart the server
+  - If you return your module back to `OK` status, the server returns to `OK` status as well - thus
+    avoiding the automatic restarts.
+
+Here is an example component using health monitoring:
+
+```python
+import gooddata_flight_server as gf
+
+class YourMissionCriticalComponent:
+    """
+    Let's say this component is used from your FlexFunctions to perform
+    some heavy lifting / important job.
+
+    The component is created / initialized during `on_load` of FlexFunction and you
+    propagate the `health` monitor that comes in the server context.
+    """
+    def __init__(self, health: gf.ServerHealthMonitor) -> None:
+        self._health = health
+
+    def some_important_method(self):
+        try:
+            # this does some important work
+            return
+        except OSError:
+            # it runs into some kind of unrecoverable error (OSError here is purely example);
+            # by setting the status to NOT_OK, your component indicates that it is unhealthy
+            # and the /live endpoint will report the entire server as unhealthy.
+            #
+            # usually, the liveness checks have a grace period. if you set the module back
+            # to `gf.ModuleHealthStatus.NOT_OK` everything turns healthy again. If the grace
+            # period elapses, the server will usually be restarted by the environment.
+            self._health.set_module_status("YourMissionCriticalComponent", gf.ModuleHealthStatus.NOT_OK)
+            raise
+```
+
 ### Dev-testing
 
 A FlexFunction is a piece of code like any other. The fact that it is exposed via Flight RPC
