@@ -115,7 +115,7 @@ In order for the function to be loaded and exposed via Flight RPC, you need to r
 the server. This is purely a configuration step:
 
 - Open the [config/flexfun.config.toml](./config/flexfun.config.toml) configuration file
-- Within that file, there is a `function` setting. This is a list of Python modules that are expected
+- Within that file, there is a `functions` setting. This is a list of Python modules that are expected
   to contain the `FlexFun` implementations.
 
   You add name of Python module that contains the FlexFun. You code this the same way as when doing
@@ -132,7 +132,7 @@ to manage code-wise.
 #### FlexFunctions recommendations
 
 Your concrete FlexFunction implementation is integrated into GoodData Flight server which handles
-all the technicalities and boilerplate related to sane operations and function invocations.
+all the technicalities and boilerplate related to server operations and function invocations.
 
 For every invocation of FlexFunction via the Flight RPC, the server will create a new instance
 of your class. It is strongly recommended that this is as fast as possible and does not perform
@@ -264,6 +264,8 @@ goes as follows:
   are documented in the respective OpenTelemetry exporter package; e.g. they are not
   something special to GoodData's Flight Server.
 
+  See [official exporter documentation](https://opentelemetry-python.readthedocs.io/en/latest/exporter/otlp/otlp.html#module-opentelemetry.exporter.otlp.proto.grpc).
+
 - Install `opentelemetry-api` and the respective exporter package.
 
   See the [requirements.txt](requirements.txt). The packages are already listed there but
@@ -271,8 +273,7 @@ goes as follows:
 
 - Tweak the other `otel_*` settings: you must at minimum set the `otel_service_name`
 
-  The other settings will fall back to defaults. However, it is usually likely that you
-  will want to customize them to fit your conventions.
+  The settings apart from `otel_service_name` will fall back to defaults.
 
 To start tracing, you need to initialize a tracer. You can do so as follows:
 
@@ -331,10 +332,10 @@ Typically, if your function does not do any crazy / non-standard stuff, then the
 solid guarantee that a function passing tests will run fine once it is running inside the
 Flight RPC server.
 
-Additionally, you can use the `./run-server.sh` which will start the full Flight RPC server
-with your functions: you can do end-to-end testing using Flight RPC. For a simple manual smoke
-test, look at the [try_dev_server.py](./tests/flexfun/try_dev_server.py) - this lists functions
-available on the running dev server.
+Additionally, the template comes with fixtures for automated end-to-end testing. See the
+[test_e2e.py](tests/flexfun/test_e2e.py). In a nutshell, the `testing_flexfun_server` fixture
+will start a server running your functions; you can then make calls to the server using
+the standard FlightClient.
 
 **HINT**: if you need additional third-party dependencies for dev/test, then add those to
 the [requirements-dev.txt](./requirements-dev.txt).
@@ -382,23 +383,6 @@ As the name indicates, the `.secrets` file is useful for holding any sensitive i
   used for authentication.
 
   This one is a bit tricky, you have to specify an array of tokens: `'["...", "..."]'`
-
-## Building Docker image
-
-The `make docker` target is available and builds Docker image `flexfun-server`. You may want
-to modify the image name and specify your own custom one.
-
-The Docker image build will:
-
-- Install all dependencies from `requirements.txt` file
-
-  IMPORTANT: dependencies from requirements-dev.txt are intentionally not installed.
-
-- Copy content of the entire `src` folder and make sure it is added on PYTHONPATH
-
-  IMPORTANT: contents of `tests` directory is not copied to the image.
-
-- Copy content of the entire `config` folder
 
 ## Running and testing locally using Docker Compose
 
@@ -482,7 +466,7 @@ variables are derived from setting names:
   so you end up with `GOODDATA_FLIGHT_SERVER__LISTEN_HOST`
 
   All settings that can be specified in the TOML file can be also set via environment
-  variable.
+  variable. The value from environment variable always wins.
 
 Furthermore, we recommend checking the Dynaconf documentation - it has a lot of additional
 features which you can take advantage of. It even has its own templating.
@@ -545,7 +529,7 @@ Using TLS (Transport Level Security) is highly recommended. To do so, you have t
 obtain certificate and private key for your server - a topic that is not covered
 in this manual.
 
-When you have private key and the certificate (typically a `.pem` files), you can
+When you have private key and the certificate (typically in `.pem` files), you can
 configure these server settings (server.config.toml):
 
 - `use_tls = true` to enable TLS
@@ -580,7 +564,8 @@ many cases can be the simplest or most straightforward.
 2. Install production dependencies:
 
    - Your host must have Python 3.11 installed
-   - On the host, run `make prod` - this will install production dependencies
+   - On the host, run `make prod` - this will install production dependencies into
+     its own virtual environment.
 
 3. Start the server
 
@@ -594,7 +579,64 @@ many cases can be the simplest or most straightforward.
 
 ### Dockerized deployment
 
-TODO
+This template comes with a [Dockerfile](./Dockerfile) and an [example script](./run-docker.sh) to
+start the dockerized server hosting your FlexFunctions.
+
+As everything in the template, both the Dockerfile and the example are just one way to
+proceed with Dockerized deployment; they are yours to change or even throw away and do
+them your way from scratch to suit your deployment. You may be using Docker Swarm, Nomad,
+k8s or some managed service - naturally, the example script is of little use in such contexts.
+
+#### Docker Image
+
+The `make docker` target is available and builds Docker image `flexfun-server`. You may want
+to modify the image name and specify your own custom one.
+
+The Docker image build will:
+
+- Install all dependencies from `requirements.txt` file
+
+  IMPORTANT: dependencies from requirements-dev.txt are intentionally not installed.
+
+- Copy content of the entire `src` folder and make sure it is added on PYTHONPATH
+
+  IMPORTANT: contents of `tests` directory is not copied to the image.
+
+- Copy content of the entire `config` folder
+
+#### Important considerations when running in Docker
+
+The most important aspect to re-iterate here is the setup of `listen_host` and `advertise_host`:
+
+
+- You most often want to set `listen_host` to `0.0.0.0` so that the server listens
+  on all addresses _inside_ the Docker container.
+
+- The `advertise_host` must be then set to a host name that can be correctly resolved
+  by your server's clients; this is usually different from any hostname that
+  is set _inside_ the Docker container. In most cases, you _have_ to provide the hostname
+  from outside.
+
+### Multiple server replicas and load balancing
+
+To foster resiliency and horizontal scalability, you can run multiple replicas of the server
+running your Flex Functions. You can register all these replicas to the Flight RPC data source
+and then set the load balancing strategy. Check out the following section to find an example.
+
+It is critical to remember, that any **infrastructure-level load balancing will most likely
+break things**. That is because the FlexFunction servers are **stateful**:
+
+- FlexFunction invocation happens in two steps.
+- In the first step, the Flight RPC GetFlightInfo is called (as per spec) to tell
+  the server to invoke the function and prepare the data. A response to GetFlightInfo contains,
+  among other things, the `advertise_host` location of the server where to pick up the result.
+- In the second step, the Flight RPC DoGet is called to actually pick up the data from the
+  advertised location returned in the previous step.
+
+Now, if you have a setup (common in k8s with gRPC load balancing) where there is a single hostname that
+transparently balances to multiple replicas, things **will** break. The GetFlightInfo request lands
+on one replica, computes results and returns pointers to access that result. The subsequent DoGet call
+may however, be routed to completely different replica where the result is not present.
 
 ## Adding Data Source to GoodData Cloud
 
@@ -667,6 +709,47 @@ import base64
 
 with open("ca-cert.pem", "rb") as file:
     print(base64.b64encode(file.read()))
+```
+
+### Load Balancing
+
+If you have multiple replicas of the server running your FlexFunctions, you can code them in the `url`, delimited
+using semicolon.
+
+You can then specify the `loadBalancing` parameter to so the load balancing strategy to use:
+
+- `none` - there will be no load balancing; the first server from the list will be used all the time; when the
+  server is down, GoodData will contact next server in the list. This is the default.
+
+- `round-robin` - requests will be distributed among servers using round-robin strategy.
+
+- `random` - requests will be distributed among servers randomly
+
+```bash
+curl https://<gooddatacloud>/api/v1/entities/dataSources \
+-H "Authorization: Bearer <gooddata-token>" \
+-s -H "Content-Type: application/vnd.gooddata.api+json" \
+-X POST \
+-d '{
+  "data": {
+    "id": "flexfun-server",
+    "type": "dataSource",
+    "attributes": {
+      "url": "grpc+tls://<your-hostname1>:<port>;grpc+tls://<your-hostname2>:<port>",
+      "name": "flexfun-server",
+      "type": "FLIGHTRPC",
+      "token": "<secret authentication token for the Flight RPC server>",
+      "schema": "",
+      "cacheStrategy": "NEVER",
+      "parameters": [
+        {
+          "name": "loadBalancing",
+          "value": "round-robin"
+        }
+      ]
+    }
+  }
+}'
 ```
 
 ### Cache strategy
