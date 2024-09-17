@@ -37,6 +37,11 @@ export GOODDATA_FLIGHT_SERVER__LISTEN_PORT="17001"
 export GOODDATA_FLIGHT_SERVER__ADVERTISE_HOST="localhost"
 export GOODDATA_FLIGHT_SERVER__ADVERTISE_PORT="17001"
 
+# This enables health-checking endpoints. They are HTTP endpoints /ready and /live
+# that report 202 when server is ready and/or alive and 500 otherwise.
+export GOODDATA_FLIGHT_SERVER__HEALTH_CHECK_HOST="0.0.0.0"
+export GOODDATA_FLIGHT_SERVER__HEALTH_CHECK_PORT="8877"
+
 # Configure TLS certificate and private key for the server.
 #
 # IMPORTANT
