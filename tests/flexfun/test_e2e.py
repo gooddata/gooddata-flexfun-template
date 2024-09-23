@@ -14,15 +14,17 @@ def test_list_flexfuns(testing_flexfun_server):
     for flight_info in c.list_flights():
         function_descriptor = orjson.loads(flight_info.descriptor.command)
 
-        assert function_descriptor["function_name"] == "SampleFlexFunction"
+        assert function_descriptor["functionName"] == "SampleFlexFunction"
 
 
-def test_function_call(testing_flexfun_server):
+def test_function_call(testing_flexfun_server, flexfun_parameters):
     c = pyarrow.flight.FlightClient(testing_flexfun_server.location)
 
     flight_info = c.get_flight_info(
         pyarrow.flight.FlightDescriptor.for_command(
-            orjson.dumps({"function_name": "SampleFlexFunction"})
+            orjson.dumps(
+                {"functionName": "SampleFlexFunction", "parameters": flexfun_parameters}
+            )
         )
     )
     data: pyarrow.Table = c.do_get(flight_info.endpoints[0].ticket).read_all()
