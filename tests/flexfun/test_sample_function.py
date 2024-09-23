@@ -2,8 +2,8 @@
 from flexfun.sample_function import SampleFlexFunction
 
 
-def test_sample_function1():
+def test_sample_function1(flexfun_parameters):
     fun = SampleFlexFunction.create()
-    result = fun.call({}, None, {})
+    result = fun.call(flexfun_parameters, None, {})
 
     assert result is not None

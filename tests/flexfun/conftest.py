@@ -6,6 +6,7 @@ from contextlib import closing
 
 import gooddata_flight_server as gf
 import pytest
+from gooddata_flexfun import create_flexfun_flight_methods
 
 __current_dir__ = os.path.dirname(os.path.abspath(__file__))
 __config_dir__ = os.path.join(__current_dir__, "..", "..", "config")
@@ -69,7 +70,7 @@ def testing_flexfun_server(
 
     try:
         server = gf.create_server(
-            gf.create_flexfun_flight_methods,
+            create_flexfun_flight_methods,
             config_files=testing_server_config_files,
             dev_log=True,
         )
@@ -84,3 +85,89 @@ def testing_flexfun_server(
     finally:
         for env_var in testing_server_env_config.keys():
             os.environ.pop(env_var)
+
+
+@pytest.fixture(scope="module")
+def flexfun_parameters() -> dict:
+    """
+    Mock parameters that are passed to the FlexFunction with valid execution context.
+    """
+    return {
+        "executionContext": {
+            "executionType": "REPORT",
+            "organizationId": "default",
+            "workspaceId": "demo",
+            "userId": "demo",
+            "timestamp": "2024-09-12T12:51:26+00:00",
+            "timezone": "Etc/UTC",
+            "weekStart": "sunday",
+            "executionRequest": {
+                "attributes": [
+                    {
+                        "localIdentifier": "a_attribute1",
+                        "label": {"identifier": {"id": "attribute1", "type": "label"}},
+                        "showAllValues": False,
+                    }
+                ],
+                "filters": [
+                    {
+                        "negativeAttributeFilter": {
+                            "label": {
+                                "identifier": {"id": "attribute1", "type": "label"}
+                            },
+                            "notIn": {"values": ["id1"]},
+                            "applyOnResult": None,
+                        }
+                    }
+                ],
+                "measures": [
+                    {
+                        "localIdentifier": "m_fact1_min",
+                        "definition": {
+                            "measure": {
+                                "item": {"identifier": {"id": "fact1", "type": "fact"}},
+                                "aggregation": "MIN",
+                                "computeRatio": False,
+                                "filters": [],
+                            }
+                        },
+                    }
+                ],
+                "auxMeasures": [],
+            },
+            "reportExecutionRequest": {
+                "attributes": [
+                    {
+                        "localIdentifier": "a_attribute1",
+                        "label": {"identifier": {"id": "attribute1", "type": "label"}},
+                        "showAllValues": False,
+                    }
+                ],
+                "filters": [
+                    {
+                        "negativeAttributeFilter": {
+                            "label": {
+                                "identifier": {"id": "attribute1", "type": "label"}
+                            },
+                            "notIn": {"values": ["id1"]},
+                            "applyOnResult": None,
+                        }
+                    }
+                ],
+                "measures": [
+                    {
+                        "localIdentifier": "m_fact1_min",
+                        "definition": {
+                            "measure": {
+                                "item": {"identifier": {"id": "fact1", "type": "fact"}},
+                                "aggregation": "MIN",
+                                "computeRatio": False,
+                                "filters": [],
+                            }
+                        },
+                    }
+                ],
+                "auxMeasures": [],
+            },
+        }
+    }
