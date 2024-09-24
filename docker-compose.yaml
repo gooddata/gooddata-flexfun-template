@@ -36,6 +36,8 @@ services:
       - ./config:/tmp/config:Z
     command:
       - start
+      - --methods-provider
+      - gooddata_flexfun
       - --config
       - /tmp/config/dev.server.toml
       - /tmp/config/flexfun.config.toml

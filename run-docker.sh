@@ -83,6 +83,7 @@ docker run \
   -p ${GOODDATA_FLIGHT_SERVER__ADVERTISE_PORT}:${GOODDATA_FLIGHT_SERVER__ADVERTISE_PORT} \
   --volume $CERTS_DIR:/tls-files:Z \
   flexfun-server:latest start \
+  --methods-provider gooddata_flexfun \
   --config \
     /config/${CONFIG_ENV}.server.toml \
     /config/flexfun.config.toml \
