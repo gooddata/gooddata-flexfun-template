@@ -48,7 +48,6 @@ archive:
 		-cvpzf flexfuns.tar.gz \
 		./config \
 		./src \
-		./libs \
 		./requirements.txt \
 		./Makefile \
 		./run-server.sh \
