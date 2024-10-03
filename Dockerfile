@@ -3,7 +3,6 @@ ARG FLEXFUN_USER="flexfun"
 ARG FLEXFUN_GROUP="flexfun"
 
 COPY /requirements.txt /
-COPY /libs/*.whl /libs/
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends curl \
@@ -30,7 +29,7 @@ COPY /config /config
 COPY /src /src
 ENV PYTHONPATH="/src"
 
-# BEGIN OF security hardening - do not alter or remove
+# BEGIN OF security hardening
 RUN /usr/bin/rm -rf /etc/crontab /etc/cron.d /etc/cron.hourly /etc/cron.daily /etc/cron.weekly /etc/cron.monthly ; \
     /usr/bin/sed -i '/^CREATE_HOME/ s/^CREATE_HOME.*/CREATE_HOME yes/; t; $ aCREATE_HOME yes' /etc/login.defs
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
