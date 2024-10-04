@@ -11,13 +11,13 @@ init-secrets:
 
 .PHONY: dev
 dev: init-secrets
-	python3.11 -m venv .venv --upgrade-deps
+	python3.12 -m venv .venv --upgrade-deps
 	source .venv/bin/activate && pip3 install -r requirements.txt -r requirements-dev.txt
 	.venv/bin/pre-commit install
 
 .PHONY: prod
 prod:
-	python3.11 -m venv .venv --upgrade-deps
+	python3.12 -m venv .venv --upgrade-deps
 	source .venv/bin/activate && pip3 install -r requirements.txt
 
 .PHONY: mypy

@@ -1,6 +1,6 @@
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py312"
 exclude = [
     ".git",
     ".venv",
@@ -53,7 +53,7 @@ plugins = "pydantic.mypy"
 disallow_untyped_defs = true
 warn_redundant_casts = true
 strict_equality = true
-python_version = "3.11"
+python_version = "3.12"
 mypy_path = """\
     /src\
 """
