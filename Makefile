@@ -27,13 +27,13 @@ prod:
 mypy:
 	.venv/bin/mypy --show-error-codes src
 
-.PHONY: format-fix
-format-fix:
+.PHONY: fix-format
+fix-format:
 	.venv/bin/ruff format .
 	.venv/bin/ruff check . --fix --fixable I
 
-.PHONY: fix-staged
-fix-staged:
+.PHONY: fix-all
+fix-all:
 	pre-commit run --all-files
 
 

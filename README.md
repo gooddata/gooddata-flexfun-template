@@ -431,15 +431,14 @@ grow large.
 There are a few Makefile targets for the usual tasks:
 
 - `make mypy` - run type checker
-- `make format-fix` - run ruff format and ruff check in auto-fix mode on all files
-- `make fix-staged` - runs pre-commit on all staged files.
-  this will do ruff format and check in auto-fix mode but just on the files you have modified.
+- `make fix-format` - run ruff format and ruff check in auto-fix mode on all files
+- `make fix-all` - runs configured pre-commit hooks on all files in the repository.
+  Note: `ruff` format and check with auto-fix is part of the pre-commit.
 
-**IMPORTANT**: Do keep in mind that pre-commit will not auto-stage files that were modified
-as it was running the configured hooks. What this means is that commits will fail if
-the `pre-commit` hooks getting involved and modify (auto-fix) the files. You typically
-then have to re-drive the commit. The recommended workflow is to run `make fix-staged` first,
-and when green proceed with the commit itself.
+**IMPORTANT**: Keep in mind that pre-commit will not auto-stage files that were modified
+while it is running the configured hooks. What this means is that commit will fail if
+the `pre-commit` hooks get involved and auto-fix the files. You typically then have to
+re-drive the commit.
 
 #### Secrets for dev and dev testing
 
