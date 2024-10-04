@@ -11,26 +11,29 @@ init-secrets:
 
 .PHONY: dev
 dev: init-secrets
-	python3.11 -m venv .venv --upgrade-deps
+	python3.12 -m venv .venv --upgrade-deps
 	source .venv/bin/activate && pip3 install -r requirements.txt -r requirements-dev.txt
 	.venv/bin/pre-commit install
 
+	# TODO: temporary correction for missing marker. remove once we fix the gooddata-flexfun.
+	touch .venv/lib/python3.12/site-packages/gooddata_flexfun/py.typed
+
 .PHONY: prod
 prod:
-	python3.11 -m venv .venv --upgrade-deps
+	python3.12 -m venv .venv --upgrade-deps
 	source .venv/bin/activate && pip3 install -r requirements.txt
 
 .PHONY: mypy
 mypy:
 	.venv/bin/mypy --show-error-codes src
 
-.PHONY: format-fix
-format-fix:
+.PHONY: fix-format
+fix-format:
 	.venv/bin/ruff format .
 	.venv/bin/ruff check . --fix --fixable I
 
-.PHONY: fix-staged
-fix-staged:
+.PHONY: fix-all
+fix-all:
 	pre-commit run --all-files
 
 

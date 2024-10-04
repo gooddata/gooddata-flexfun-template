@@ -15,7 +15,7 @@ repos:
         args: [ '--maxkb=600' ]
       - id: check-case-conflict
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.2
+    rev: v0.6.8
     hooks:
       - id: ruff-format
       - id: ruff

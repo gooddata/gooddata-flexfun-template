@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 ARG FLEXFUN_USER="flexfun"
 ARG FLEXFUN_GROUP="flexfun"
 
