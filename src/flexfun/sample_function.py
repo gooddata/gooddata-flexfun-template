@@ -68,6 +68,9 @@ class SampleFlexFunction(FlexFun):
         _LOGGER.info("function_called", parameters=parameters)
 
         execution_context = ExecutionContext.from_parameters(parameters)
+        if execution_context is None:
+            # This can happen for invalid invocations that do not come from GoodData
+            raise ValueError("Function did not receive execution context.")
 
         _LOGGER.info("execution_context", execution_context=execution_context)
 

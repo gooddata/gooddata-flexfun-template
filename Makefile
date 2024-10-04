@@ -15,6 +15,9 @@ dev: init-secrets
 	source .venv/bin/activate && pip3 install -r requirements.txt -r requirements-dev.txt
 	.venv/bin/pre-commit install
 
+	# TODO: temporary correction for missing marker. remove once we fix the gooddata-flexfun.
+	touch .venv/lib/python3.12/site-packages/gooddata_flexfun/py.typed
+
 .PHONY: prod
 prod:
 	python3.12 -m venv .venv --upgrade-deps
