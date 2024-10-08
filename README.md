@@ -55,7 +55,7 @@ instance and then add that location as data source to GoodData Cloud or Cloud Na
 ## Getting Started
 
 To get started with custom functions is easy. The only prerequisite is a working installation of
-Python 3.11 and access to internet:
+Python 3.12 and access to internet:
 
 1.  Clone this template: `git clone git@github.com:gooddata/gooddata-flexfun-template.git <your-directory>`
 2.  Navigate to your directory `cd <your-directory>`
@@ -65,7 +65,7 @@ Python 3.11 and access to internet:
 
 4.  [Optional] The project is set up with `.envrc` - if you use [direnv](https://direnv.net/), then do `direnv allow`
 
-HINT: If you have trouble installing Python 3.11, we recommend using [pyenv](https://github.com/pyenv/pyenv).
+HINT: If you have trouble installing Python 3.12, we recommend using [pyenv](https://github.com/pyenv/pyenv).
 First, correctly install pyenv using its installation guide. Then after step #2 above, do `pyenv install` and `pyenv local`.
 Then you can continue with `make dev`
 
@@ -638,7 +638,7 @@ many cases can be the simplest or most straightforward.
 
 2. Install production dependencies:
 
-   - Your host must have Python 3.11 installed
+   - Your host must have Python 3.12 installed
    - On the host, run `make prod` - this will install production dependencies into
      its own virtual environment.
 
