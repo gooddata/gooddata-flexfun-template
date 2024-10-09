@@ -3,7 +3,7 @@ version: '3.7'
 
 services:
   gooddata-cn-ce:
-    image: 020413372491.dkr.ecr.us-east-1.amazonaws.com/nas/gooddata-cn-ce:master
+    image: gooddata/gooddata-cn-ce:latest
     ports:
       - "3000:3000"
       - "5432:5432"
